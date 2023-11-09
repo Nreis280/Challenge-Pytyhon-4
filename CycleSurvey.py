@@ -116,7 +116,7 @@ def createTableAcessorio():
     finally:
         cursor.close
         conn.close    
-
+# ------------------------------------------------------------ 
 ## Funções para Obter dados enviados pelo usuario.
 def informacao_proprietario():
     infoCliente = []
@@ -233,7 +233,7 @@ def cadastrar_acessorio(last_generated_id):
             print('\nOpção inválida! Tente novamente')
             escolha = 3
 
-
+# ------------------------------------------------------------ 
 ## Funções para criar sequencias de IDs de cada tabala
 def create_seq_pessoa():
     conn = getConnection()
@@ -305,7 +305,7 @@ def create_seq_Ac():
         cursor.close()
         conn.close()
 
-
+# ------------------------------------------------------------ 
 ## Funções para Inserir os dados obtidos nas tabelas
 def insert_endereco(infoEndereco):
     conn = getConnection()
@@ -321,14 +321,14 @@ def insert_endereco(infoEndereco):
         cursor.close
         conn.close
 
-def insert_pessoa_fisica(infoCliente, infoEndereco):
+def insert_pessoa_fisica(infoCliente, infoEndereco,last_generated_id):
     conn = getConnection()
     cursor = conn.cursor()
-    sql_query = "INSERT INTO t_cycleSurvey_pessoa_fisica (ID_PESSOA, NM_COMPLETO, DT_NASCIMENTO, CPF, CELULAR, CEP) VALUES (seq_Pessoa.NEXTVAL, :0, TO_DATE(:1, 'dd/mm/yyyy'), :2, :3, :4)"
+    sql_query = "INSERT INTO t_cycleSurvey_pessoa_fisica (ID_PESSOA, NM_COMPLETO, DT_NASCIMENTO, CPF, CELULAR, CEP, BICICLETA_ID) VALUES (seq_Pessoa.NEXTVAL, :0, TO_DATE(:1, 'dd/mm/yyyy'), :2, :3, :4, :5)"
 
     
     try:
-        cursor.execute(sql_query, (infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoEndereco[0]))
+        cursor.execute(sql_query, (infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoEndereco[0],last_generated_id))
         conn.commit()
         print("Registro de cliente inserido com sucesso.")
     except Exception as e:
@@ -392,16 +392,22 @@ def insert_Ac(acs, last_generated_id):
 #Principal
 # Variavel para acessar as funções para criar as tabelas!
 """ creatTable= createTableEndereco(),createTableInfoBike(),createTablePessoaF(),createTableAcessorio() """
+# ------------------------------------------------------------ 
 
-# Variavel para acessar as funções para criar as seguencias do ID!
-""" seq = create_seq_pessoa() """
+# Criando as seguencias do ID!
+""" create_seq_pessoa()
+create_seq_bike()
+create_seq_Ac() """
 
-""" ifo = informacao_proprietario()
-infoE = informacao_endereco() """
+# ------------------------------------------------------------ 
 
-""" ine = insert_endereco(ifo) """
+# funçoes para cadastrar Proprietario, endereço, bicicleta e acessorio. 
+infoP = informacao_proprietario()
+infoE = informacao_endereco()
+infoB = cadastrar_bike()
+# ------------------------------------------------------------ 
 
-""" ine = insert_endereco(infoE)
-ins = insert_pessoa_fisica(ifo,infoE) """
-
-b = cadastrar_bike()
+# funçoes para inserir no banco de dados as informaçoes Proprietario , endereço, bicicleta e acessoerios.
+inB = insert_Bike(infoB) 
+inE = insert_endereco(infoE)
+inP = insert_pessoa_fisica(infoP,infoE,inB)
