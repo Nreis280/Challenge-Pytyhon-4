@@ -116,6 +116,7 @@ def createTableAcessorio():
     finally:
         cursor.close
         conn.close    
+
 # ------------------------------------------------------------ 
 ## Funções para Obter dados enviados pelo usuario.
 def informacao_proprietario():
@@ -134,30 +135,25 @@ def informacao_proprietario():
     cel = input('📱 Celular: ')
     infoCliente.append(cel)
 
-    return infoCliente
-
-def informacao_endereco():
-    infoEndereco = []
-
     cep = input('📫 CEP: ')
-    infoEndereco.append(cep)
+    infoCliente.append(cep)
 
     cidade = input('🏠 Cidade: ')
-    infoEndereco.append(cidade)
+    infoCliente.append(cidade)
 
     logradouro = input('🛣️  logradouro:')
-    infoEndereco.append(logradouro)
+    infoCliente.append(logradouro)
 
     numero = input('🪧  Número: ')
-    infoEndereco.append(numero)
+    infoCliente.append(numero)
 
     estado = input('🗺️  Estado:')
-    infoEndereco.append(estado)
+    infoCliente.append(estado)
 
     complemento = input('🏘️  Complemento:')
-    infoEndereco.append(complemento)
+    infoCliente.append(complemento)
 
-    return infoEndereco
+    return infoCliente
 
 def cadastrar_bike():
     infoBike = []
@@ -307,28 +303,15 @@ def create_seq_Ac():
 
 # ------------------------------------------------------------ 
 ## Funções para Inserir os dados obtidos nas tabelas
-def insert_endereco(infoEndereco):
-    conn = getConnection()
-    cursor = conn.cursor()
-    sql_query = "INSERT INTO t_cycleSurvey_endereco (CEP, CIDADE , LOGRADOURO, NUM_LOGRADOURO, ESTADO, COMPLEMENTO) VALUES (:0, :1, :2, :3, :4, :5)"
-    try:
-        cursor.execute(sql_query, (infoEndereco[0], infoEndereco[1], infoEndereco[2], infoEndereco[3], infoEndereco[4], infoEndereco[5]))
-        conn.commit()
-        print("Registro inserido")
-    except Exception as e:
-        print(f'Erro ao inserir o registro: {e}')
-    finally:
-        cursor.close
-        conn.close
 
-def insert_pessoa_fisica(infoCliente, infoEndereco,last_generated_id):
+def insert_pessoa_fisica(infoCliente,last_generated_id):
     conn = getConnection()
     cursor = conn.cursor()
-    sql_query = "INSERT INTO t_cycleSurvey_pessoa_fisica (ID_PESSOA, NM_COMPLETO, DT_NASCIMENTO, CPF, CELULAR, CEP, BICICLETA_ID) VALUES (seq_Pessoa.NEXTVAL, :0, TO_DATE(:1, 'dd/mm/yyyy'), :2, :3, :4, :5)"
+    sql_query = "INSERT INTO t_cycleSurvey_pessoa_fisica (ID_PESSOA, NM_COMPLETO, DT_NASCIMENTO, CPF, CELULAR, CEP, CIDADE , LOGRADOURO, NUM_LOGRADOURO, ESTADO, COMPLEMENTO, BICICLETA_ID) VALUES (seq_Pessoa.NEXTVAL, :0, TO_DATE(:1, 'dd/mm/yyyy'), 2, :3, :4, :5, :6, :7, :8, :9, :10)"
 
     
     try:
-        cursor.execute(sql_query, (infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoEndereco[0],last_generated_id))
+        cursor.execute(sql_query, (infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoCliente[4],infoCliente[5],infoCliente[6],infoCliente[7],infoCliente[8],infoCliente[9],infoCliente[10],last_generated_id))
         conn.commit()
         print("Registro de cliente inserido com sucesso.")
     except Exception as e:
@@ -403,11 +386,9 @@ create_seq_Ac() """
 
 # funçoes para cadastrar Proprietario, endereço, bicicleta e acessorio. 
 infoP = informacao_proprietario()
-infoE = informacao_endereco()
 infoB = cadastrar_bike()
 # ------------------------------------------------------------ 
 
 # funçoes para inserir no banco de dados as informaçoes Proprietario , endereço, bicicleta e acessoerios.
 inB = insert_Bike(infoB) 
-inE = insert_endereco(infoE)
-inP = insert_pessoa_fisica(infoP,infoE,inB)
+inP = insert_pessoa_fisica(infoP,inB)
