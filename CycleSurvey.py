@@ -1,5 +1,3 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-
 
 import cx_Oracle
 cx_Oracle.init_oracle_client(lib_dir=r"C:\instantclient_21_12")
@@ -13,44 +11,21 @@ def getConnection():
     except Exception as e:
         print(f'Erro ao obter conexão: {e}')
 
-'''1. CRIANDO TABELA PARA ARMAZENAR ENDEREÇO DA PESSOA FISICA'''
-def createTableEndereco():
-    conn= getConnection()
-    cursor = conn.cursor()
-    sql_endereco = """
-    CREATE TABLE t_cycleSurvey_endereco(
-        CEP VARCHAR(9) NOT NULL,
-        CIDADE VARCHAR(50) NOT NULL,
-        LOGRADOURO VARCHAR(100) NOT NULL,
-        NUM_LOGRADOURO VARCHAR(8) NOT NULL,
-        ESTADO CHAR(2) NOT NULL,
-        COMPLEMENTO VARCHAR(15),
-        CONSTRAINT pk_t_cycleSurvey_endereco PRIMARY KEY (cep)
-    )"""
-
-    try:
-        cursor.execute(sql_endereco)
-        print("Tabela t_cycleSurvey_endereco criada")
-    except Exception as e:
-        print(f'Erro ao criar a tabela t_cycleSurvey_endereco: {e}')
-    finally:
-        cursor.close
-        conn.close    
-
-'''2. CRIANDO TABELA PARA ARMAZENAR DADOS DA BICICLETA'''
+'''1. CRIANDO TABELA PARA ARMAZENAR DADOS DA BICICLETA'''
 def createTableInfoBike():
     
     conn= getConnection()
     cursor = conn.cursor()
     sql_bike = """
-    CREATE TABLE t_cycleSurvey_info_bike(
-        BICICLETA_ID NUMERIC(10),
-        MARCA VARCHAR(25) NOT NULL,
-        MODELO VARCHAR(30) NOT NULL,
-        VALOR VARCHAR(11) NOT NULL,
-        ANO_COMPRA VARCHAR(4) NOT NULL,
-        NOTA_FISCAL VARCHAR(40) NOT NULL,
-        CONSTRAINT pk_t_cycleSurvey_info_bike PRIMARY KEY(bicicleta_id)
+    CREATE TABLE tb_info_bike(
+        id_bike     NUMBER(10) PRIMARY KEY,
+        marca       VARCHAR2(25) NOT NULL,
+        modelo      VARCHAR2(30) NOT NULL,
+        valor       NUMBER(11) NOT NULL,
+        ano_compra  VARCHAR2(4)  NOT NULL,
+        nota_fiscal VARCHAR2(40) NOT NULL,
+        id_pf       NUMBER(10)   NOT NULL,
+        CONSTRAINT fk_pessoa_fisica FOREIGN KEY (id_pf) REFERENCES tb_pessoa_fisica (id_pf)
 )"""
 
     try:
@@ -62,24 +37,25 @@ def createTableInfoBike():
         cursor.close
         conn.close    
 
-'''3. CRIANDO TABELA PARA ARMZAENAR DADOS DA PESSOA FISICA'''
+'''2. CRIANDO TABELA PARA ARMZAENAR DADOS DA PESSOA FISICA'''
 def createTablePessoaF():
     
     conn= getConnection()
     cursor = conn.cursor()
     sql_pessoaF = """
-    CREATE TABLE t_cycleSurvey_pessoa_fisica (
-        ID_PESSOA NUMERIC(10),
-        NM_COMPLETO VARCHAR2(40) NOT NULL,
-        DT_NASCIMENTO DATE NOT NULL,
-        CPF VARCHAR2(14) NOT NULL,
-        CELULAR VARCHAR2(14) NOT NULL,
-        CEP VARCHAR2(9),
-        BICICLETA_ID NUMBER,
-        CONSTRAINT fk_pessoa_fisica_bicicleta FOREIGN KEY (BICICLETA_ID) REFERENCES t_cycleSurvey_info_bike (BICICLETA_ID),
-        CONSTRAINT fk_pessoa_fisica_endereco FOREIGN KEY (CEP) REFERENCES t_cycleSurvey_endereco (CEP),
-        CONSTRAINT pk_t_cycleSurvey_pessoa_fisica PRIMARY KEY (ID_PESSOA)
-    )"""
+    CREATE TABLE tb_pessoa_fisica(
+        id_pf          NUMBER(10) PRIMARY KEY,
+        nm_completo    VARCHAR2(40)  NOT NULL,
+        dt_nascimento  DATE          NOT NULL,
+        cpf            VARCHAR2(14)  NOT NULL,
+        celular        VARCHAR2(14)  NOT NULL,
+        cep            VARCHAR2(9)   NOT NULL,
+        cidade         VARCHAR2(50)  NOT NULL,
+        logradouro     VARCHAR2(100) NOT NULL,
+        num_logradouro VARCHAR2(8)   NOT NULL,
+        estado         CHAR(2)       NOT NULL,
+        complemento    VARCHAR2(20)
+        )"""
 
     try:
         cursor.execute(sql_pessoaF)
@@ -90,23 +66,22 @@ def createTablePessoaF():
         cursor.close
         conn.close 
 
-'''4. CRIANDO TABELA PARA ARMAZENAR DADOS DO ACESSORIO DA BICICLETA'''
+'''3. CRIANDO TABELA PARA ARMAZENAR DADOS DO ACESSORIO DA BICICLETA'''
 def createTableAcessorio():
     
     conn= getConnection()
     cursor = conn.cursor()
     sql_acessorio = """
-    CREATE TABLE t_cycleSurvey_acessorio (
-        ACESSORIO_ID NUMERIC(10),
-        MARCA_ACESSORIO VARCHAR2(25) NOT NULL,
-        MODELO VARCHAR2(40) NOT NULL,
-        TIPO_ACESSORIO VARCHAR2(30) NOT NULL,
-        VALOR VARCHAR2(11) NOT NULL,
-        NOTA_FISCAL VARCHAR2(40) NOT NULL,
-        BICICLETA_ID NUMBER,
-        CONSTRAINT fk_acessorio_bicicleta FOREIGN KEY (BICICLETA_ID) REFERENCES t_cycleSurvey_info_bike (BICICLETA_ID),
-        CONSTRAINT pk_t_cycleSurvey_acessorio PRIMARY KEY (ACESSORIO_ID)
-    )
+    CREATE TABLE tb_acessorio(
+        id_acessorio          NUMBER(10) PRIMARY KEY,
+        nota_fiscal_acessorio VARCHAR2(40) NOT NULL,
+        marca_acessorio       VARCHAR2(25) NOT NULL,
+        modelo                VARCHAR2(40) NOT NULL,
+        tipo_acessorio        VARCHAR2(30) NOT NULL,
+        valor                 NUMBER(19,2) NOT NULL,
+        id_bike               NUMBER(10),
+        CONSTRAINT fk_info_bike FOREIGN KEY (id_bike) REFERENCES tb_info_bike (id_bike)
+)
 """
     try:
         cursor.execute(sql_acessorio)
@@ -167,25 +142,24 @@ def informacao_proprietario():
                 print('------------------------------------------------')
                 validCep = 1
 
-    cidade = '🏠 Cidade: {}'.format(address_data['localidade'])
-    print(cidade)
+    cidade = '{}'.format(address_data['localidade'])
+    print(f'🏠 Cidade: {cidade}')
     infoCliente.append(cidade)
 
-    logradouro = '🛣️  logradouro: {}'.format(address_data['logradouro'])
-    print(logradouro)
+    logradouro = '{}'.format(address_data['logradouro'])
+    print(f'🛣️  logradouro: {logradouro}')
     infoCliente.append(logradouro)
 
     numero = input('🪧  Número: ')
     infoCliente.append(numero)
 
-    estado = '🗺️  Estado: {}'.format(address_data['uf'])
-    print(estado)
+    estado = '{}'.format(address_data['uf'])
+    print(f'🗺️  Estado: {estado}')
     infoCliente.append(estado)
 
-    complemento = '🏘️  Complemento: {}'.format(address_data['complemento'])
-    print(complemento)
+    complemento = '{}'.format(address_data['complemento'])
+    print(f'🏘️  Complemento: {complemento}')
     infoCliente.append(complemento)
-    
     
 
     return infoCliente
@@ -226,20 +200,24 @@ def cadastrar_acessorio(last_generated_id):
                 acs = []
                 print('\n -------- Informações do Acessório --------')
                 print(f'Acessorio:')
-                marca = input('🏷️  Marca:')
-                acs.append(marca)
-                
-                modelo = input('🔖 Modelo: ')
-                acs.append(modelo)
-
-                valorAc = float(input('💰 Valor: ')) #pegar o valor para somar com o valor da bike
-                acs.append(valorAc)
-
-                tipo = input('📍 Tipo: ') #pegar o valor para somar com o valor da bike
-                acs.append(tipo)
 
                 nfAc = input('🧾 Nota Fiscal: ')
                 acs.append(nfAc)
+
+                marca = input('🏷️  Marca:')
+                acs.append(marca)
+
+                modelo = input('🔖 Modelo: ')
+                acs.append(modelo)
+
+                tipo = input('📍 Tipo: ') #pegar o valor para somar com o valor da bike
+                acs.append(tipo)
+                valorAc = float(input('💰 Valor: ')) #pegar o valor para somar com o valor da bike
+                acs.append(valorAc)
+
+                
+
+                
                 
 
                 falha=1
@@ -339,25 +317,47 @@ def create_seq_Ac():
 # ------------------------------------------------------------ 
 ## Funções para Inserir os dados obtidos nas tabelas
 
-def insert_pessoa_fisica(infoCliente,last_generated_id):
+def insert_pessoa_fisica(infoCliente):
     conn = getConnection()
     cursor = conn.cursor()
-    sql_query = "INSERT INTO t_cycleSurvey_pessoa_fisica (ID_PESSOA, NM_COMPLETO, DT_NASCIMENTO, CPF, CELULAR, CEP, CIDADE , LOGRADOURO, NUM_LOGRADOURO, ESTADO, COMPLEMENTO, BICICLETA_ID) VALUES (seq_Pessoa.NEXTVAL, :0, TO_DATE(:1, 'dd/mm/yyyy'), 2, :3, :4, :5, :6, :7, :8, :9, :10)"
-
     
+    sql_query = "INSERT INTO tb_pessoa_fisica (id_pf, nm_completo, dt_nascimento, cpf, celular, cep, cidade, logradouro, num_logradouro,estado, complemento) VALUES (:0,:1, TO_DATE(:2, 'dd/mm/yyyy'), :3, :4, :5, :6, :7, :8, :9, :10)"
+
     try:
-        cursor.execute(sql_query, (infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoCliente[4],infoCliente[5],infoCliente[6],infoCliente[7],infoCliente[8],infoCliente[9],infoCliente[10],last_generated_id))
-        conn.commit()
-        print("Registro de cliente inserido com sucesso.")
+
+        cursor.execute("SELECT seq_Pessoa.NEXTVAL FROM dual")
+        nextval_result = cursor.fetchone()
+        
+        if nextval_result:
+            pessoa_id = nextval_result[0]
+
+            
+            cursor.execute(sql_query, (pessoa_id,infoCliente[0], infoCliente[1], infoCliente[2], infoCliente[3], infoCliente[4],infoCliente[5],infoCliente[6],infoCliente[7],infoCliente[8],infoCliente[9]))
+            conn.commit()
+            print("Registro de cliente inserido com sucesso.")
+            print("Cadastro do Cliente efetuado com sucesso. ID do cliente:", pessoa_id)
+
+            cursor.execute("SELECT seq_Pessoa.currval FROM dual")
+            result = cursor.fetchone()
+            if result:
+                lgi = result[0]
+                return lgi
+            else:
+                    print(f"Erro ao obter o último valor gerado pela sequência: {e}")
+        else:
+            print("Erro ao obter o próximo valor da sequência")
+
     except Exception as e:
         print(f'Erro ao inserir o registro de cliente: {e}')
     finally:
         cursor.close()
         conn.close()
 
-def insert_Bike(infoBike):
+def insert_Bike(infoBike,lgi):
     conn = getConnection()
     cursor = conn.cursor()
+
+    sql_query = "INSERT INTO tb_info_bike (id_bike, MARCA, MODELO, VALOR, ANO_COMPRA, NOTA_FISCAL, id_pf) VALUES ( :0, :1, :2, :3, :4, :5, :6)"
 
     try:
         # Obtenha o próximo valor da sequência
@@ -368,8 +368,7 @@ def insert_Bike(infoBike):
             bicicleta_id = nextval_result[0]
 
             # Inserir a bicicleta
-            sql_query = "INSERT INTO t_cycleSurvey_info_bike (BICICLETA_ID, MARCA, MODELO, VALOR, ANO_COMPRA, NOTA_FISCAL) VALUES ( :0, :1, :2, :3, :4, :5)"
-            cursor.execute(sql_query, (bicicleta_id,infoBike[0], infoBike[1], infoBike[2], infoBike[3], infoBike[4]))
+            cursor.execute(sql_query, (bicicleta_id,infoBike[0], infoBike[1], infoBike[2], infoBike[3], infoBike[4],lgi))
             conn.commit()
             print("Cadastro de bicicleta efetuado com sucesso. ID da bicicleta:", bicicleta_id)
 
@@ -394,12 +393,22 @@ def insert_Ac(acs, last_generated_id):
     conn = getConnection()
     cursor = conn.cursor()
 
-    sql_query = "INSERT INTO t_cycleSurvey_acessorio (ACESSORIO_ID, MARCA_ACESSORIO, MODELO, TIPO_ACESSORIO, VALOR, NOTA_FISCAL, BICICLETA_ID) VALUES (seq_Ac.NEXTVAL, :0, :1, :2, :3, :4, :5)"
+    sql_query = "INSERT INTO tb_acessorio (id_acessorio, nota_fiscal_acessorio, MARCA_ACESSORIO, MODELO, tipo_acessorio, VALOR, id_bike ) VALUES (:0, :1, :2, :3, :4, :5, :6)"
 
     try:
-        cursor.execute(sql_query, (acs[0], acs[1], acs[2], acs[3], acs[4], last_generated_id))
-        conn.commit()
-        print("Cadastro de acessório efetuado com sucesso.")
+        
+        cursor.execute("SELECT seq_Ac.NEXTVAL FROM dual")
+        nextval_result = cursor.fetchone()
+        
+        if nextval_result:
+            ac_id = nextval_result[0]
+
+            cursor.execute(sql_query, (ac_id,acs[0], acs[1], acs[2], acs[3], acs[4], last_generated_id))
+            conn.commit()
+            print("Cadastro de acessório efetuado com sucesso.")
+            print("Cadastro de acessório efetuado com sucesso. ID do Acessorio:", ac_id)
+        else:
+            print("Erro ao obter o próximo valor da sequência")
     except Exception as e:
         print(f'Erro ao cadastrar acessório: {e}')
     finally:
@@ -409,21 +418,22 @@ def insert_Ac(acs, last_generated_id):
 
 #Principal
 # Variavel para acessar as funções para criar as tabelas!
-""" creatTable= createTableEndereco(),createTableInfoBike(),createTablePessoaF(),createTableAcessorio() """
+creatTable = createTablePessoaF(),createTableInfoBike(),createTableAcessorio()
 # ------------------------------------------------------------ 
 
 # Criando as seguencias do ID!
-""" create_seq_pessoa()
+create_seq_pessoa()
 create_seq_bike()
-create_seq_Ac() """
+create_seq_Ac()
 
 # ------------------------------------------------------------ 
 
 # funçoes para cadastrar Proprietario, endereço, bicicleta e acessorio. 
 infoP = informacao_proprietario()
-""" infoB = cadastrar_bike() """
+inP = insert_pessoa_fisica(infoP)
+infoB = cadastrar_bike()
 # ------------------------------------------------------------ 
 
 # funçoes para inserir no banco de dados as informaçoes Proprietario , endereço, bicicleta e acessoerios.
-""" inB = insert_Bike(infoB) 
-inP = insert_pessoa_fisica(infoP,inB) """
+
+inB = insert_Bike(infoB,inP) 
