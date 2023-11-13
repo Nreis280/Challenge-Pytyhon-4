@@ -129,29 +129,64 @@ def informacao_proprietario():
     nascimento = input('📅 Data de Nascimento [dd/mm/aaaa]: ')
     infoCliente.append(nascimento)
 
-    cpf = input('🪪  CPF:')
-    infoCliente.append(cpf)
+    validCpf = 1
+    while validCpf == 1 :
+        cpf = input('🪪  CPF:')
+        if len(cpf) !=11:
+            print('CPF inválido!, digite novamente')
+            validCpf = 1
+        else:
+            infoCliente.append(cpf)
+            validCpf = 0
 
-    cel = input('📱 Celular: ')
-    infoCliente.append(cel)
+    
+    validCel = 1
+    while validCel == 1 :
+        cel = input('📱 Celular: ')
+        if len(cel) !=11:
+            print('número de telefone inválido, lembre-se de colocar o ddd antes do número')
+        else:
+            infoCliente.append(cel)
+            validCel = 0
 
-    cep = input('📫 CEP: ')
-    infoCliente.append(cep)
+    validCep = 1
+    while validCep == 1:
+        cep = input('📫 CEP: ')
+        if len(cep) !=8:
+            print('Quantidade de digitos inválida!')
+            validCep = 1
+        else:
+            import requests
+            requests = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep))
+            address_data = requests.json()
+            if 'erro' not in address_data:
+                infoCliente.append(cep)
+                validCep = 0
+            else:
+                print('{}: CEP invalido! porfavor insira um cep valido!!'.format(cep))
+                print('------------------------------------------------')
+                validCep = 1
 
-    cidade = input('🏠 Cidade: ')
+    cidade = '🏠 Cidade: {}'.format(address_data['localidade'])
+    print(cidade)
     infoCliente.append(cidade)
 
-    logradouro = input('🛣️  logradouro:')
+    logradouro = '🛣️  logradouro: {}'.format(address_data['logradouro'])
+    print(logradouro)
     infoCliente.append(logradouro)
 
     numero = input('🪧  Número: ')
     infoCliente.append(numero)
 
-    estado = input('🗺️  Estado:')
+    estado = '🗺️  Estado: {}'.format(address_data['uf'])
+    print(estado)
     infoCliente.append(estado)
 
-    complemento = input('🏘️  Complemento:')
+    complemento = '🏘️  Complemento: {}'.format(address_data['complemento'])
+    print(complemento)
     infoCliente.append(complemento)
+    
+    
 
     return infoCliente
 
@@ -386,9 +421,9 @@ create_seq_Ac() """
 
 # funçoes para cadastrar Proprietario, endereço, bicicleta e acessorio. 
 infoP = informacao_proprietario()
-infoB = cadastrar_bike()
+""" infoB = cadastrar_bike() """
 # ------------------------------------------------------------ 
 
 # funçoes para inserir no banco de dados as informaçoes Proprietario , endereço, bicicleta e acessoerios.
-inB = insert_Bike(infoB) 
-inP = insert_pessoa_fisica(infoP,inB)
+""" inB = insert_Bike(infoB) 
+inP = insert_pessoa_fisica(infoP,inB) """
